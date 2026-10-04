@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
 # Tank volumes
 V_up = 5.0e-6 # Upstream tank volume [m^3]
@@ -80,7 +81,7 @@ dt = safety_factor * dt_limit
 # Simulation time
 # --------------------------------------------------------------------------------------
 
-t_end = 100.0  # Total simulation time [s]
+t_end = 5000.0  # Total simulation time [s]
 
 num_steps = int(np.ceil(t_end / dt))
 
@@ -224,3 +225,48 @@ print(f"Final delta P: {delta_P_history[-1] / 1e3:.3f} kPa")
 
 print()
 print("Transient monotonicity checks passed.")
+
+# --------------------------------------------------------------------------------------
+# Plot pressure histories
+# --------------------------------------------------------------------------------------
+
+plt.figure()
+
+plt.plot(
+    time,
+    P_up_history / 1e6,
+    label="Upstream pressure"
+)
+
+plt.plot(
+    time,
+    P_down_history / 1e6,
+    label="Downstream pressure"
+)
+
+plt.xlabel("Time [s]")
+plt.ylabel("Pressure [MPa]")
+plt.title("Tank pressure histories")
+plt.grid(True)
+plt.legend()
+plt.tight_layout()
+
+
+# --------------------------------------------------------------------------------------
+# Plot differential pressure
+# --------------------------------------------------------------------------------------
+
+plt.figure()
+
+plt.plot(
+    time,
+    delta_P_history / 1e3
+)
+
+plt.xlabel("Time [s]")
+plt.ylabel("Differential pressure [kPa]")
+plt.title("Pulse-decay differential pressure")
+plt.grid(True)
+plt.tight_layout()
+
+plt.show()
