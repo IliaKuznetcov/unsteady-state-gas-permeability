@@ -28,6 +28,14 @@ dx = L / N
 x = np.linspace(0.0, L, N + 1)
 
 # --------------------------------------------------------------------------------------
+# Effective boundary storage volumes
+# --------------------------------------------------------------------------------------
+
+V_up_eff = V_up + porosity * area * dx / 2.0
+V_down_eff = V_down + porosity * area * dx / 2.0
+
+
+# --------------------------------------------------------------------------------------
 # Initial pressures
 # --------------------------------------------------------------------------------------
 
@@ -68,6 +76,25 @@ dt_limit = (
 
 dt = safety_factor * dt_limit
 
+# --------------------------------------------------------------------------------------
+# Simulation time
+# --------------------------------------------------------------------------------------
+
+t_end = 100.0  # Total simulation time [s]
+
+num_steps = int(np.ceil(t_end / dt))
+
+# --------------------------------------------------------------------------------------
+# Solution history
+# --------------------------------------------------------------------------------------
+
+time = np.zeros(num_steps + 1)
+P_up_history = np.zeros(num_steps + 1)
+P_down_history = np.zeros(num_steps + 1)
+
+P_up_history[0] = P[0]
+P_down_history[0] = P[-1]
+
 # Verify the corresponding maximum diffusion coefficient
 r_max_bound = (
     k * (P_max + b) * dt
@@ -75,124 +102,111 @@ r_max_bound = (
 )
 
 # --------------------------------------------------------------------------------------
-# Interior FDM coefficients
+# Explicit time integration
 # --------------------------------------------------------------------------------------
 
-r = (
-    k * (P[1:-1] + b) *dt
-    / (porosity * mu * dx**2)
-)
+for n in range(num_steps):
 
-
-# --------------------------------------------------------------------------------------
-# Effective boundary storage volumes
-# --------------------------------------------------------------------------------------
-
-V_up_eff = V_up + porosity * area * dx / 2.0
-V_down_eff = V_down + porosity * area * dx / 2.0
-
-
-# --------------------------------------------------------------------------------------
-# Storage-consistent boundary coefficients
-# --------------------------------------------------------------------------------------
-
-r_up = (
-    k * area * (P[0] + b) * dt
-    / (mu * dx * V_up_eff)
-)
-
-r_down = (
-    k * area * (P[-1] + b) * dt
-    / (mu * dx * V_down_eff)
-)
-
-
-# --------------------------------------------------------------------------------------
-# Stability checks
-# --------------------------------------------------------------------------------------
-
-if not np.all(np.isfinite(r)):
-    raise ValueError("Non-finite interior FDM coefficient detected.")
-
-if np.any(r < 0.0) or np.any(r > 0.5):
-    raise ValueError(
-        f"Interior stability limit violated: "
-        f"min(r) = {np.min(r):.6f}, max(r) = {np.max(r):.6f}"
+    # Recalculate pressure-dependent interior coefficients
+    r = (
+        k * (P[1:-1] + b) * dt
+        / (porosity * mu * dx**2)
     )
 
-if not np.isfinite(r_up) or not 0.0 <= r_up <= 1.0:
-    raise ValueError(
-        f"Upstream boundary coefficient invalid: r_up = {r_up:.6f}"
+    # Recalculate pressure-dependent boundary coefficients
+    r_up = (
+        k * area * (P[0] + b) * dt
+        / (mu * dx * V_up_eff)
     )
 
-if not np.isfinite(r_down) or not 0.0 <= r_down <= 1.0:
-    raise ValueError(
-        f"Downstream boundary coefficient invalid: r_down = {r_down:.6f}"
+    r_down = (
+        k * area * (P[-1] + b) * dt
+        / (mu * dx * V_down_eff)
     )
 
+    # Stability checks
+    if not np.all(np.isfinite(r)):
+        raise ValueError("Non-finite interior FDM coefficient detected.")
 
-# --------------------------------------------------------------------------------------
-# First complete explicit FDM step
-# --------------------------------------------------------------------------------------
+    if np.any(r < 0.0) or np.any(r > 0.5):
+        raise ValueError(
+            f"Interior stability limit violated at step {n}: "
+            f"min(r) = {np.min(r):.6f}, max(r) = {np.max(r):.6f}"
+        )
 
-phi_new = phi.copy()
+    if not np.isfinite(r_up) or not 0.0 <= r_up <= 1.0:
+        raise ValueError(
+            f"Upstream boundary coefficient invalid at step {n}: "
+            f"r_up = {r_up:.6f}"
+        )
 
-# Interior nodes
-phi_new[1:-1] = (
-    phi[1:-1]
-    + r * (
-        phi[2:]
-        - 2.0 * phi[1:-1]
-        + phi[:-2]
+    if not np.isfinite(r_down) or not 0.0 <= r_down <= 1.0:
+        raise ValueError(
+            f"Downstream boundary coefficient invalid at step {n}: "
+            f"r_down = {r_down:.6f}"
+        )
+
+    # New transformed-pressure state
+    phi_new = phi.copy()
+
+    phi_new[1:-1] = (
+        phi[1:-1]
+        + r * (
+            phi[2:]
+            - 2.0 * phi[1:-1]
+            + phi[:-2]
+        )
     )
-)
 
-# Upstream boundary
-phi_new[0] = (
-    phi[0]
-    + r_up * (phi[1] - phi[0])
-)
+    phi_new[0] = (
+        phi[0]
+        + r_up * (phi[1] - phi[0])
+    )
 
-# Downstream boundary
-phi_new[-1] = (
-    phi[-1]
-    + r_down * (phi[-2] - phi[-1])
-)
+    phi_new[-1] = (
+        phi[-1]
+        + r_down * (phi[-2] - phi[-1])
+    )
 
+    # Validate new state
+    if not np.all(np.isfinite(phi_new)):
+        raise ValueError(f"Non-finite phi detected at step {n}.")
 
-# --------------------------------------------------------------------------------------
-# New-state validity checks
-# --------------------------------------------------------------------------------------
+    if np.any(phi_new <= 0.0):
+        raise ValueError(f"Non-positive phi detected at step {n}.")
 
-if not np.all(np.isfinite(phi_new)):
-    raise ValueError("Non-finite value detected in phi_new.")
+    # Recover pressure
+    P_new = np.sqrt(phi_new) - b
 
-if np.any(phi_new <= 0.0):
-    raise ValueError("Non-positive value detected in phi_new.")
+    # Accept the timestep
+    phi = phi_new
+    P = P_new
 
-
-# --------------------------------------------------------------------------------------
-# Recover pressure
-# --------------------------------------------------------------------------------------
-
-P_new = np.sqrt(phi_new) - b
+    # Store results
+    time[n + 1] = (n + 1) * dt
+    P_up_history[n + 1] = P[0]
+    P_down_history[n + 1] = P[-1]
 
 # --------------------------------------------------------------------------------------
 # Diagnostics
 # --------------------------------------------------------------------------------------
 
-print()
-print(f"Effective upstream storage: {V_up_eff:.6e} m^3")
-print(f"Effective downstream storage: {V_down_eff:.6e} m^3")
+delta_P_history = P_up_history - P_down_history
 
 print()
-print(f"Upstream boundary r: {r_up:.6f}")
-print(f"Downstream boundary r: {r_down:.6f}")
+print(f"Number of time steps: {num_steps}")
+print(f"Final time:           {time[-1]:.3f} s")
 
 print()
-print("Pressure after one complete FDM step:")
-print(P_new)
+print(f"Initial Pu: {P_up_history[0] / 1e6:.6f} MPa")
+print(f"Final Pu:   {P_up_history[-1] / 1e6:.6f} MPa")
 
-print(f"Upstream pressure:   {P[0] / 1e6:.6f} -> {P_new[0] / 1e6:.6f} MPa")
-print(f"Node 1 pressure:     {P[1] / 1e6:.6f} -> {P_new[1] / 1e6:.6f} MPa")
-print(f"Downstream pressure: {P[-1] / 1e6:.6f} -> {P_new[-1] / 1e6:.6f} MPa")
+print()
+print(f"Initial Pd: {P_down_history[0] / 1e6:.6f} MPa")
+print(f"Final Pd:   {P_down_history[-1] / 1e6:.6f} MPa")
+
+print()
+print(f"Final delta P: {delta_P_history[-1] / 1e3:.3f} kPa")
+
+if np.any(np.diff(delta_P_history) > 0.0):
+    raise ValueError("Differential pressure increased during the simulation.")
