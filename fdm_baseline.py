@@ -1,5 +1,10 @@
 import numpy as np
 
+# Tank volumes
+V_up = 5.0e-6 # Upstream tank volume [m^3]
+V_down = 5.0e-6 # Downstream tank volume [m^3]
+
+
 # --------------------------------------------------------------------------------------
 # Core geometry and gas properties
 # --------------------------------------------------------------------------------------
@@ -79,11 +84,13 @@ r = (
 )
 
 # --------------------------------------------------------------------------------------
-# First explicit FDM update of interior nodes
+# First complete explicit FDM step
+# Interior nodes + storage-consistent tank boundaries
 # --------------------------------------------------------------------------------------
 
 phi_new = phi.copy()
 
+# Interior nodes
 phi_new[1:-1] = (
     phi[1:-1]
     + r * (
@@ -93,68 +100,57 @@ phi_new[1:-1] = (
     )
 )
 
+# --------------------------------------------------------------------------------------
+# Storage-consistent boundary updates
+# --------------------------------------------------------------------------------------
+
+V_up_eff = V_up + porosity * area * dx / 2.0
+V_down_eff = V_down + porosity * area * dx / 2.0
+
+r_up = (
+    k * area * (P[0] + b) * dt
+    / (mu * dx * V_up_eff)
+)
+
+r_down = (
+    k * area * (P[-1] + b) * dt
+    / (mu * dx * V_up_eff)
+)
+
 P_new = np.sqrt(phi_new) - b
 
-
-
 # --------------------------------------------------------------------------------------
-# Basic verification
+# Storage-consistent boundary updates
 # --------------------------------------------------------------------------------------
 
-print(f"Core length: {L:.6f} m")
-print(f"Core diameter: {D:.6f} m")
-print(f"Core area: {area:.6f} m^2")
+phi_new[0] = (
+    phi[0]
+    + r_up * (phi[1] - phi[0])
+)
 
-print()
+phi_new[-1] = (
+    phi[-1]
+    + r_down * (phi[-2] - phi[-1])
+)
 
-print(f"Number of intervals: {N}")
-print(f"Number of nodes: {len(x)}")
-print(f"Grid spacing dx: {dx:.06e} m")
-
-print()
-
-print("Initial pressure array:")
-print(P)
-
-print()
-print(f"Upstream pressure: {P[0] / 1.e6:.3f} MPa")
-print(f"Downstream pressure: {P[-1] / 1e6:.3f} MPa")
+P_new = np.sqrt(phi_new) - b
 
 # --------------------------------------------------------------------------------------
-# Verify transformation
+# Diagnostics
 # --------------------------------------------------------------------------------------
 
-transformation_error = np.max(np.abs(P_recovered - P))
+print()
+print(f"Effective upstream storage: {V_up_eff:.6e} m^3")
+print(f"Effective downstream storage: {V_down_eff:.6e} m^3")
 
 print()
-print("Initial transformed pressure array:")
-print(phi)
+print(f"Upstream boundary r: {r_up:.6f}")
+print(f"Downstream boundary r: {r_down:.6f}")
 
 print()
-print(f"Maximum transformation error: {transformation_error:.6e} Pa")
-
-
-# Verify the corresponding maximum diffusion coefficient
-
-print()
-print(f"Maximum pressure: {P_max / 1.e6:.3f} MPa")
-print(f"Stability limit dt: {dt_limit:.6e} s")
-print(f"Selected dt: {dt:.6e} s")
-print(f"Global r bound: {r_max_bound:.6f}")
-
-# Verify interior FDM coefficients
-print()
-print("Interior r coefficients:")
-print(r)
-
-print()
-print(f"Maximum interior r: {np.max(r):.6f}")
-
-# Verify first FDM update
-print()
-print("Pressure after one interior FDM step:")
+print("Pressure after one complete FDM step:")
 print(P_new)
 
-print()
-print(f"Old P at node 1: {P[1] / 1e6:.6f} MPa")
-print(f"New P at node 1: {P_new[1] / 1e6:.6f} MPa")
+print(f"Upstream pressure:   {P[0] / 1e6:.6f} -> {P_new[0] / 1e6:.6f} MPa")
+print(f"Node 1 pressure:     {P[1] / 1e6:.6f} -> {P_new[1] / 1e6:.6f} MPa")
+print(f"Downstream pressure: {P[-1] / 1e6:.6f} -> {P_new[-1] / 1e6:.6f} MPa")
