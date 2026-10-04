@@ -23,7 +23,7 @@ mu = 1.8e-5 # Gas viscosity [Pa * s]
 # --------------------------------------------------------------------------------------
 
 N = 40
-dx = L/N
+dx = L / N
 
 x = np.linspace(0.0, L, N + 1)
 
@@ -70,7 +70,7 @@ dt = safety_factor * dt_limit
 
 # Verify the corresponding maximum diffusion coefficient
 r_max_bound = (
-    k * (P_max + b) *dt
+    k * (P_max + b) * dt
     / (porosity * mu * dx**2)
 )
 
@@ -83,9 +83,56 @@ r = (
     / (porosity * mu * dx**2)
 )
 
+
+# --------------------------------------------------------------------------------------
+# Effective boundary storage volumes
+# --------------------------------------------------------------------------------------
+
+V_up_eff = V_up + porosity * area * dx / 2.0
+V_down_eff = V_down + porosity * area * dx / 2.0
+
+
+# --------------------------------------------------------------------------------------
+# Storage-consistent boundary coefficients
+# --------------------------------------------------------------------------------------
+
+r_up = (
+    k * area * (P[0] + b) * dt
+    / (mu * dx * V_up_eff)
+)
+
+r_down = (
+    k * area * (P[-1] + b) * dt
+    / (mu * dx * V_down_eff)
+)
+
+
+# --------------------------------------------------------------------------------------
+# Stability checks
+# --------------------------------------------------------------------------------------
+
+if not np.all(np.isfinite(r)):
+    raise ValueError("Non-finite interior FDM coefficient detected.")
+
+if np.any(r < 0.0) or np.any(r > 0.5):
+    raise ValueError(
+        f"Interior stability limit violated: "
+        f"min(r) = {np.min(r):.6f}, max(r) = {np.max(r):.6f}"
+    )
+
+if not np.isfinite(r_up) or not 0.0 <= r_up <= 1.0:
+    raise ValueError(
+        f"Upstream boundary coefficient invalid: r_up = {r_up:.6f}"
+    )
+
+if not np.isfinite(r_down) or not 0.0 <= r_down <= 1.0:
+    raise ValueError(
+        f"Downstream boundary coefficient invalid: r_down = {r_down:.6f}"
+    )
+
+
 # --------------------------------------------------------------------------------------
 # First complete explicit FDM step
-# Interior nodes + storage-consistent tank boundaries
 # --------------------------------------------------------------------------------------
 
 phi_new = phi.copy()
@@ -100,38 +147,33 @@ phi_new[1:-1] = (
     )
 )
 
-# --------------------------------------------------------------------------------------
-# Storage-consistent boundary updates
-# --------------------------------------------------------------------------------------
-
-V_up_eff = V_up + porosity * area * dx / 2.0
-V_down_eff = V_down + porosity * area * dx / 2.0
-
-r_up = (
-    k * area * (P[0] + b) * dt
-    / (mu * dx * V_up_eff)
-)
-
-r_down = (
-    k * area * (P[-1] + b) * dt
-    / (mu * dx * V_up_eff)
-)
-
-P_new = np.sqrt(phi_new) - b
-
-# --------------------------------------------------------------------------------------
-# Storage-consistent boundary updates
-# --------------------------------------------------------------------------------------
-
+# Upstream boundary
 phi_new[0] = (
     phi[0]
     + r_up * (phi[1] - phi[0])
 )
 
+# Downstream boundary
 phi_new[-1] = (
     phi[-1]
     + r_down * (phi[-2] - phi[-1])
 )
+
+
+# --------------------------------------------------------------------------------------
+# New-state validity checks
+# --------------------------------------------------------------------------------------
+
+if not np.all(np.isfinite(phi_new)):
+    raise ValueError("Non-finite value detected in phi_new.")
+
+if np.any(phi_new <= 0.0):
+    raise ValueError("Non-positive value detected in phi_new.")
+
+
+# --------------------------------------------------------------------------------------
+# Recover pressure
+# --------------------------------------------------------------------------------------
 
 P_new = np.sqrt(phi_new) - b
 
