@@ -188,10 +188,24 @@ for n in range(num_steps):
     P_down_history[n + 1] = P[-1]
 
 # --------------------------------------------------------------------------------------
-# Diagnostics
+# Transient solution checks
 # --------------------------------------------------------------------------------------
 
 delta_P_history = P_up_history - P_down_history
+
+if np.any(np.diff(P_up_history) > 0.0):
+    raise ValueError("Upstream pressure increased during pulse decay.")
+
+if np.any(np.diff(P_down_history) < 0.0):
+    raise ValueError("Downstream pressure decreased during pulse decay.")
+
+if np.any(np.diff(delta_P_history) > 0.0):
+    raise ValueError("Differential pressure increased during pulse decay.")
+
+
+# --------------------------------------------------------------------------------------
+# Diagnostics
+# --------------------------------------------------------------------------------------
 
 print()
 print(f"Number of time steps: {num_steps}")
@@ -208,5 +222,5 @@ print(f"Final Pd:   {P_down_history[-1] / 1e6:.6f} MPa")
 print()
 print(f"Final delta P: {delta_P_history[-1] / 1e3:.3f} kPa")
 
-if np.any(np.diff(delta_P_history) > 0.0):
-    raise ValueError("Differential pressure increased during the simulation.")
+print()
+print("Transient monotonicity checks passed.")
