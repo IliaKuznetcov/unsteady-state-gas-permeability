@@ -69,6 +69,32 @@ r_max_bound = (
     / (porosity * mu * dx**2)
 )
 
+# --------------------------------------------------------------------------------------
+# Interior FDM coefficients
+# --------------------------------------------------------------------------------------
+
+r = (
+    k * (P[1:-1] + b) *dt
+    / (porosity * mu * dx**2)
+)
+
+# --------------------------------------------------------------------------------------
+# First explicit FDM update of interior nodes
+# --------------------------------------------------------------------------------------
+
+phi_new = phi.copy()
+
+phi_new[1:-1] = (
+    phi[1:-1]
+    + r * (
+        phi[2:]
+        - 2.0 * phi[1:-1]
+        + phi[:-2]
+    )
+)
+
+P_new = np.sqrt(phi_new) - b
+
 
 
 # --------------------------------------------------------------------------------------
@@ -115,3 +141,20 @@ print(f"Maximum pressure: {P_max / 1.e6:.3f} MPa")
 print(f"Stability limit dt: {dt_limit:.6e} s")
 print(f"Selected dt: {dt:.6e} s")
 print(f"Global r bound: {r_max_bound:.6f}")
+
+# Verify interior FDM coefficients
+print()
+print("Interior r coefficients:")
+print(r)
+
+print()
+print(f"Maximum interior r: {np.max(r):.6f}")
+
+# Verify first FDM update
+print()
+print("Pressure after one interior FDM step:")
+print(P_new)
+
+print()
+print(f"Old P at node 1: {P[1] / 1e6:.6f} MPa")
+print(f"New P at node 1: {P_new[1] / 1e6:.6f} MPa")
