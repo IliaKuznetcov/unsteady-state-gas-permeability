@@ -272,23 +272,38 @@ for result in results:
 # Observed convergence order
 # --------------------------------------------------------------------------------------
 #
-# For an error that behaves approximately as:
+# For a consistent numerical discretization, the error can often be expanded as
+# a Taylor-series-like sequence of powers of the grid spacing:
+#
+#     E(dx) = C1*dx + C2*dx**2 + C3*dx**3 + ...
+#
+# Once the mesh is sufficiently fine, the lowest non-zero power usually
+# dominates, so the error behaves approximately as:
 #
 #     E ~ C * dx**p
 #
-# the observed order p is estimated from two successive meshes as:
+# where p is the observed convergence order.
+#
+# Therefore, for two successive meshes:
 #
 #     p = log(E_coarse / E_fine) / log(dx_coarse / dx_fine)
 #
 # Interpretation:
-#     p ~ 1  -> first-order convergence: halving dx approximately halves the error
-#     p ~ 2  -> second-order convergence: halving dx approximately quarters the error
+#     p ~ 1  -> first-order convergence:
+#              halving dx approximately halves the error
 #
-# In this coupled tank-core FDM, the equilibrium and inventory diagnostics
-# converge at approximately first order, even though the interior centred
-# second-difference stencil itself is second order in space. The overall
-# observed order is influenced by the boundary treatment, initial
-# discontinuity, storage representation, and time discretization.
+#     p ~ 2  -> second-order convergence:
+#              halving dx approximately quarters the error
+#
+# The value of p is not assumed in advance; it is inferred from the numerical
+# refinement results. In this coupled tank-core FDM, the measured equilibrium
+# and inventory errors converge at approximately first order.
+#
+# Although the centred interior second-difference stencil is second order in
+# space, the complete coupled solver also contains boundary treatment, the
+# discontinuous initial condition, storage representation, and time
+# discretization. In particular, the initial half-cell inventory bias is
+# proportional to dx, so it can dominate the global error and produce p ~ 1.
 # --------------------------------------------------------------------------------------
 
 def observed_order(error_coarse, error_fine, dx_coarse, dx_fine):
