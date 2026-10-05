@@ -92,6 +92,7 @@ num_steps = int(np.ceil(t_end / dt))
 time = np.zeros(num_steps + 1)
 P_up_history = np.zeros(num_steps + 1)
 P_down_history = np.zeros(num_steps + 1)
+inventory_history = np.zeros(num_steps + 1)
 
 P_up_history[0] = P[0]
 P_down_history[0] = P[-1]
@@ -100,6 +101,16 @@ P_down_history[0] = P[-1]
 r_max_bound = (
     k * (P_max + b) * dt
     / (porosity * mu * dx**2)
+)
+
+inventory_history[0] = (
+    V_up * P[0]
+    + V_down * P[-1]
+    + porosity * area * dx * (
+        0.5 * P[0]
+        + np.sum(P[1:-1])
+        + 0.5 * P[-1]
+    )
 )
 
 # --------------------------------------------------------------------------------------
@@ -187,6 +198,15 @@ for n in range(num_steps):
     time[n + 1] = (n + 1) * dt
     P_up_history[n + 1] = P[0]
     P_down_history[n + 1] = P[-1]
+    inventory_history[n + 1] = (
+        V_up * P[0]
+            + V_down * P[-1]
+            + porosity * area * dx * (
+                0.5 * P[0]
+                + np.sum(P[1:-1])
+                + 0.5 * P[-1]
+            )
+    )
 
 # --------------------------------------------------------------------------------------
 # Transient solution checks
@@ -203,6 +223,13 @@ if np.any(np.diff(P_down_history) < 0.0):
 if np.any(np.diff(delta_P_history) > 0.0):
     raise ValueError("Differential pressure increased during pulse decay.")
 
+# Calculate the relative inventory error
+inventory_error_history = (
+    inventory_history - inventory_history[0]
+) / inventory_history[0]
+
+max_inventory_error = np.max(np.abs(inventory_error_history))
+final_inventory_error = inventory_error_history[-1]
 
 # --------------------------------------------------------------------------------------
 # Diagnostics
@@ -225,6 +252,44 @@ print(f"Final delta P: {delta_P_history[-1] / 1e3:.3f} kPa")
 
 print()
 print("Transient monotonicity checks passed.")
+
+print()
+print(f"Initial inventory:       {inventory_history[0]:.6e} Pa m^3")
+print(f"Final inventory:         {inventory_history[-1]:.6e} Pa m^3")
+print(f"Final inventory error:   {final_inventory_error:.6e}")
+print(f"Maximum inventory error: {max_inventory_error:.6e}")
+
+# Equilibrium diagnostics
+P_eq_analytical = (
+    V_up * P_up_initial
+    + (V_down + porosity * area * L) * P_down_initial
+) / (
+    V_up + V_down + porosity * area * L
+)
+
+P_eq_discrete = (
+    inventory_history[0]
+    / (V_up + V_down + porosity * area * L)
+)
+
+P_eq_numerical = 0.5 * (
+    P_up_history[-1] + P_down_history[-1]
+)
+
+print()
+print(f"Analytical equilibrium: {P_eq_analytical / 1e6:.6f} MPa")
+print(f"Discrete equilibrium:   {P_eq_discrete / 1e6:.6f} MPa")
+print(f"Numerical equilibrium:  {P_eq_numerical / 1e6:.6f} MPa")
+
+print(
+    f"Error vs analytical: "
+    f"{(P_eq_numerical - P_eq_analytical) / 1e3:.3f} kPa"
+)
+
+print(
+    f"Error vs discrete:   "
+    f"{(P_eq_numerical - P_eq_discrete) / 1e3:.3f} kPa"
+)
 
 # --------------------------------------------------------------------------------------
 # Plot pressure histories
