@@ -9,7 +9,11 @@ Darcy–Klinkenberg permeability.
 
 The governing equations and numerical formulation are derived in:
 
-`Equation_derivations_FDM_USS.pdf`
+[Finite-Difference Formulation — Derivation and Technical Notes](docs/Equation_derivations_FDM_USS.pdf)
+
+Numerical verification results are summarized in:
+
+[FDM Verification Notes](docs/fdm_verification_notes.md)
 
 ---
 
