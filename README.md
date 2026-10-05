@@ -9,7 +9,7 @@ Darcy–Klinkenberg permeability.
 
 The governing equations and numerical formulation are derived in:
 
-\`Equation_derivations_FDM_USS.pdf\`
+`Equation_derivations_FDM_USS.pdf`
 
 ---
 
@@ -74,12 +74,12 @@ The current solver uses:
 - runtime stability, positivity, and finite-value checks;
 - pressure-volume inventory diagnostics.
 
-The reusable forward solver is implemented in \`fdm_solver.py\` and can be
+The reusable forward solver is implemented in `fdm_solver.py` and can be
 called from other scripts using:
 
-\`\`\`python
+```python
 from fdm_solver import run_fdm
-\`\`\`
+```
 
 ---
 
@@ -98,9 +98,9 @@ The automated verification suite confirms that:
 
 Run the verification suite with:
 
-\`\`\`bash
+```bash
 python fdm_verification_tests.py
-\`\`\`
+```
 
 ### Grid refinement
 
@@ -119,9 +119,9 @@ rather than only the centered interior finite-difference stencil.
 
 Run with:
 
-\`\`\`bash
+```bash
 python fdm_grid_refinement.py
-\`\`\`
+```
 
 ### Time refinement
 
@@ -146,15 +146,15 @@ integration.
 
 Run with:
 
-\`\`\`bash
+```bash
 python fdm_time_refinement.py
-\`\`\`
+```
 
 ---
 
 ## Repository Structure
 
-\`\`\`text
+```text
 fdm_solver.py
     Reusable explicit FDM forward solver.
 
@@ -173,7 +173,7 @@ fdm_verification_tests.py
 
 Equation_derivations_FDM_USS.pdf
     Mathematical derivation and technical notes for the FDM formulation.
-\`\`\`
+```
 
 ---
 
@@ -181,7 +181,7 @@ Equation_derivations_FDM_USS.pdf
 
 The verified forward-model implementation is tagged as:
 
-\`fdm-v0.1-verified\`
+`fdm-v0.1-verified`
 
 This tag provides a fixed reference point before introducing experimental
 data handling and inverse parameter estimation.
