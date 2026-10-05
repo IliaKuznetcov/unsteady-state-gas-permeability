@@ -30,21 +30,21 @@ The current baseline problem uses:
 
 | Parameter | Value |
 |---|---:|
-| Upstream volume, \(V_u\) | \(5.0\times10^{-6}\ \mathrm{m^3}\) |
-| Downstream volume, \(V_d\) | \(5.0\times10^{-6}\ \mathrm{m^3}\) |
-| Core length, \(L\) | \(0.05\ \mathrm{m}\) |
-| Core diameter, \(D\) | \(0.0254\ \mathrm{m}\) |
-| Porosity, \(\varepsilon\) | 0.10 |
-| Intrinsic permeability, \(k_\ell\) | \(1.0\times10^{-17}\ \mathrm{m^2}\) |
-| Gas viscosity, \(\mu\) | \(1.8\times10^{-5}\ \mathrm{Pa\,s}\) |
-| Klinkenberg factor, \(b\) | \(1.0\times10^5\ \mathrm{Pa}\) |
-| Initial upstream pressure | \(1.2\ \mathrm{MPa}\) |
-| Initial downstream/core pressure | \(1.0\ \mathrm{MPa}\) |
-| Spatial intervals, \(N\) | 40 |
-| Simulation duration | \(5000\ \mathrm{s}\) |
+| Upstream volume, $V_u$ | $5.0\times10^{-6}\ \mathrm{m^3}$ |
+| Downstream volume, $V_d$ | $5.0\times10^{-6}\ \mathrm{m^3}$ |
+| Core length, $L$ | $0.05\ \mathrm{m}$ |
+| Core diameter, $D$ | $0.0254\ \mathrm{m}$ |
+| Porosity, $\varepsilon$ | 0.10 |
+| Intrinsic permeability, $k_\ell$ | $1.0\times10^{-17}\ \mathrm{m^2}$ |
+| Gas viscosity, $\mu$ | $1.8\times10^{-5}\ \mathrm{Pa\,s}$ |
+| Klinkenberg factor, $b$ | $1.0\times10^5\ \mathrm{Pa}$ |
+| Initial upstream pressure | $1.2\ \mathrm{MPa}$ |
+| Initial downstream/core pressure | $1.0\ \mathrm{MPa}$ |
+| Spatial intervals, $N$ | 40 |
+| Simulation duration | $5000\ \mathrm{s}$ |
 | Stability safety factor | 0.8 |
 
-For \(N=40\),
+For $N=40$,
 
 ```math
 \Delta x = 1.25\times10^{-3}\ \mathrm{m}
@@ -60,14 +60,14 @@ The baseline calculation gives approximately:
 
 | Quantity | Result |
 |---|---:|
-| Final upstream pressure | \(1.080270\ \mathrm{MPa}\) |
-| Final downstream pressure | \(1.080269\ \mathrm{MPa}\) |
-| Final differential pressure | \(0.001\ \mathrm{kPa}\) |
-| Analytical continuous equilibrium | \(1.079786\ \mathrm{MPa}\) |
-| Discrete initial-inventory equilibrium | \(1.080291\ \mathrm{MPa}\) |
-| Error vs. analytical equilibrium | \(+0.484\ \mathrm{kPa}\) |
-| Error vs. discrete equilibrium | \(-0.022\ \mathrm{kPa}\) |
-| Maximum relative inventory drift | \(2.012071\times10^{-5}\) |
+| Final upstream pressure | $1.080270\ \mathrm{MPa}$ |
+| Final downstream pressure | $1.080269\ \mathrm{MPa}$ |
+| Final differential pressure | $0.001\ \mathrm{kPa}$ |
+| Analytical continuous equilibrium | $1.079786\ \mathrm{MPa}$ |
+| Discrete initial-inventory equilibrium | $1.080291\ \mathrm{MPa}$ |
+| Error vs. analytical equilibrium | $+0.484\ \mathrm{kPa}$ |
+| Error vs. discrete equilibrium | $-0.022\ \mathrm{kPa}$ |
+| Maximum relative inventory drift | $2.012071\times10^{-5}$ |
 
 The tank-pressure histories show the expected qualitative behavior:
 
@@ -111,9 +111,9 @@ E_I^n = \frac{I^n-I^0}{I^0}.
 
 This quantity is a diagnostic rather than an exactly conserved discrete
 invariant for the transformed FDM. The physical storage is linear in pressure,
-whereas the numerical update advances \(\phi=(P+b)^2\).
+whereas the numerical update advances $\phi=(P+b)^2$.
 
-For the \(N=40\) baseline calculation, the maximum relative drift is about
+For the $N=40$ baseline calculation, the maximum relative drift is about
 
 ```math
 2.01\times10^{-5},
@@ -126,7 +126,7 @@ or roughly 20 ppm.
 ## 3. Initial-Condition Discretization Bias
 
 The idealized continuous initial condition assigns the higher upstream pressure
-to the tank/core interface at \(x=0\), while the core for \(x>0\) begins at the
+to the tank/core interface at $x=0$, while the core for $x>0$ begins at the
 lower downstream pressure.
 
 On the node-centered grid, the trapezoidal inventory assigns half of the first
@@ -142,12 +142,12 @@ The leading inventory bias is approximately
 \left(P_{u,i}-P_{d,i}\right),
 ```
 
-so the associated equilibrium-pressure error is \(O(\Delta x)\).
+so the associated equilibrium-pressure error is $O(\Delta x)$.
 
-For the \(N=40\) baseline case, the discrete equilibrium is about
-\(0.505\ \mathrm{kPa}\) above the continuous analytical equilibrium. The small
-negative inventory drift during the transient offsets about \(0.022\ \mathrm{kPa}\)
-of this bias, leaving the numerical equilibrium about \(0.484\ \mathrm{kPa}\)
+For the $N=40$ baseline case, the discrete equilibrium is about
+$0.505\ \mathrm{kPa}$ above the continuous analytical equilibrium. The small
+negative inventory drift during the transient offsets about $0.022\ \mathrm{kPa}$
+of this bias, leaving the numerical equilibrium about $0.484\ \mathrm{kPa}$
 above the continuous analytical value.
 
 This is primarily an **initial-condition/grid representation error**, not
@@ -167,12 +167,12 @@ with the timestep reduced consistently with the explicit stability condition.
 
 ### Results
 
-| \(N\) | \(\Delta x\) [m] | \(\Delta t\) [s] | Error vs. analytical equilibrium [kPa] | Error vs. discrete equilibrium [kPa] | Max. inventory error |
+| $N$ | $\Delta x$ [m] | $\Delta t$ [s] | Error vs. analytical equilibrium [kPa] | Error vs. discrete equilibrium [kPa] | Max. inventory error |
 |---:|---:|---:|---:|---:|---:|
-| 10 | \(5.000000\times10^{-3}\) | 1.384615 | 1.934667 | -0.086739 | \(8.017994\times10^{-5}\) |
-| 20 | \(2.500000\times10^{-3}\) | 0.346154 | 0.967295 | -0.043408 | \(4.016287\times10^{-5}\) |
-| 40 | \(1.250000\times10^{-3}\) | 0.0865385 | 0.483615 | -0.021736 | \(2.012071\times10^{-5}\) |
-| 80 | \(6.250000\times10^{-4}\) | 0.0216346 | 0.241793 | -0.010882 | \(1.007600\times10^{-5}\) |
+| 10 | $5.000000\times10^{-3}$ | 1.384615 | 1.934667 | -0.086739 | $8.017994\times10^{-5}$ |
+| 20 | $2.500000\times10^{-3}$ | 0.346154 | 0.967295 | -0.043408 | $4.016287\times10^{-5}$ |
+| 40 | $1.250000\times10^{-3}$ | 0.0865385 | 0.483615 | -0.021736 | $2.012071\times10^{-5}$ |
+| 80 | $6.250000\times10^{-4}$ | 0.0216346 | 0.241793 | -0.010882 | $1.007600\times10^{-5}$ |
 
 For an asymptotic error model
 
@@ -194,7 +194,7 @@ p
 
 The observed orders are approximately:
 
-| Refinement | \(p\), analytical equilibrium error | \(p\), discrete equilibrium error | \(p\), inventory drift |
+| Refinement | $p$, analytical equilibrium error | $p$, discrete equilibrium error | $p$, inventory drift |
 |---|---:|---:|---:|
 | 10 → 20 | 1.0001 | 0.9987 | 0.9974 |
 | 20 → 40 | 1.0001 | 0.9979 | 0.9972 |
@@ -205,14 +205,14 @@ convergence** for these metrics.
 
 This does not contradict the second-order centered interior approximation.
 The observed global behavior includes the endpoint treatment, Forward Euler
-time integration, the discontinuous initial condition, and the \(O(\Delta x)\)
+time integration, the discontinuous initial condition, and the $O(\Delta x)$
 initial storage representation.
 
 ---
 
 ## 5. Time Refinement
 
-The temporal-refinement study fixes \(N=40\) and compares successive timestep
+The temporal-refinement study fixes $N=40$ and compares successive timestep
 factors
 
 ```math
@@ -233,13 +233,13 @@ by choosing integer step counts that align exactly across refinement levels.
 
 ### Transient results
 
-| Timestep factor | \(\Delta t\) [s] | \(P_u\) [MPa] | \(P_d\) [MPa] | \(\Delta P\) [kPa] |
+| Timestep factor | $\Delta t$ [s] | $P_u$ [MPa] | $P_d$ [MPa] | $\Delta P$ [kPa] |
 |---:|---:|---:|---:|---:|
-| 1.0000 | \(8.653846\times10^{-2}\) | 1.107409 | 1.053032 | 54.376813 |
-| 0.5000 | \(4.326923\times10^{-2}\) | 1.107426 | 1.053039 | 54.387207 |
-| 0.2500 | \(2.163462\times10^{-2}\) | 1.107433 | 1.053042 | 54.391691 |
-| 0.1250 | \(1.081731\times10^{-2}\) | 1.107437 | 1.053043 | 54.393818 |
-| 0.0625 | \(5.408654\times10^{-3}\) | 1.107438 | 1.053044 | 54.394856 |
+| 1.0000 | $8.653846\times10^{-2}$ | 1.107409 | 1.053032 | 54.376813 |
+| 0.5000 | $4.326923\times10^{-2}$ | 1.107426 | 1.053039 | 54.387207 |
+| 0.2500 | $2.163462\times10^{-2}$ | 1.107433 | 1.053042 | 54.391691 |
+| 0.1250 | $1.081731\times10^{-2}$ | 1.107437 | 1.053043 | 54.393818 |
+| 0.0625 | $5.408654\times10^{-3}$ | 1.107438 | 1.053044 | 54.394856 |
 
 Because no exact transient solution is available, temporal order is estimated
 by self-convergence. For three successive solutions,
@@ -260,7 +260,7 @@ p_t
 
 ### Observed temporal order
 
-| Refinement triplet | \(p_t(P_u)\) | \(p_t(P_d)\) | \(p_t(\Delta P)\) |
+| Refinement triplet | $p_t(P_u)$ | $p_t(P_d)$ | $p_t(\Delta P)$ |
 |---|---:|---:|---:|
 | 1 → 1/2 → 1/4 | 1.2880 | 1.4055 | 1.2128 |
 | 1/2 → 1/4 → 1/8 | 1.1071 | 1.1598 | 1.0764 |
@@ -312,7 +312,7 @@ is infinite. No pressure state changes.
 ### Baseline regression test
 
 The reusable `run_fdm()` implementation is required to reproduce the previously
-verified \(N=40\), 5000 s baseline solution after refactoring.
+verified $N=40$, 5000 s baseline solution after refactoring.
 
 **Status: PASS**
 
@@ -352,7 +352,7 @@ Several numerical properties should remain conceptually separate:
   timestep restrictions;
 - **monotonicity/convexity** concerns whether one-step updates introduce new
   extrema or overshoot;
-- **inventory conservation** is assessed independently through \(E_I(t)\);
+- **inventory conservation** is assessed independently through $E_I(t)$;
 - **verification** asks whether the numerical implementation solves the stated
   equations consistently;
 - **validation** asks whether the mathematical model reproduces experimental
