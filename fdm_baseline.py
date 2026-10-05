@@ -259,7 +259,11 @@ print(f"Final inventory:         {inventory_history[-1]:.6e} Pa m^3")
 print(f"Final inventory error:   {final_inventory_error:.6e}")
 print(f"Maximum inventory error: {max_inventory_error:.6e}")
 
-# Equilibrium diagnostics
+# Equilibrium diagnostics:
+# P_eq_analytical = equilibrium predicted from the continuous mass balance.
+# P_eq_discrete = equilibrium implied by the initial discrete inventory.
+# P_eq_numerical = plateau actually reached by the numerical simulation.
+
 P_eq_analytical = (
     V_up * P_up_initial
     + (V_down + porosity * area * L) * P_down_initial
