@@ -20,15 +20,15 @@ connected through a cylindrical porous core.
 
 Gas density is assumed to follow the ideal-gas relation
 
-$$
+```math
 \rho = C_g P
-$$
+```
 
 and apparent gas permeability is represented using the Klinkenberg relation
 
-$$
+```math
 k_a(P) = k_\ell \left(1 + \frac{b}{P}\right)
-$$
+```
 
 where:
 
@@ -38,7 +38,7 @@ where:
 
 Combining mass conservation with Darcy flow gives
 
-$$
+```math
 \varepsilon
 \frac{\partial P}{\partial t}
 =
@@ -48,13 +48,13 @@ $$
 (P+b)
 \frac{\partial P}{\partial x}
 \right]
-$$
+```
 
 The pressure transformation
 
-$$
+```math
 \phi = (P+b)^2
-$$
+```
 
 is used to obtain the explicit finite-difference formulation implemented in
 this repository.
@@ -106,9 +106,9 @@ python fdm_verification_tests.py
 
 Spatial refinement has been tested using
 
-$$
+```math
 N = 10,\ 20,\ 40,\ 80
-$$
+```
 
 The coupled FDM solution shows approximately first-order global convergence
 for equilibrium-pressure and inventory-error metrics.
@@ -127,19 +127,19 @@ python fdm_grid_refinement.py
 
 Temporal refinement has been tested using successive timestep reductions
 
-$$
+```math
 \Delta t,\quad
 \frac{\Delta t}{2},\quad
 \frac{\Delta t}{4},\quad
 \frac{\Delta t}{8},\quad
 \frac{\Delta t}{16}
-$$
+```
 
 The observed temporal convergence order approaches
 
-$$
+```math
 p_t \approx 1
-$$
+```
 
 consistent with the expected first-order accuracy of Forward Euler time
 integration.
